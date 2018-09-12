@@ -7,9 +7,9 @@ import android.support.annotation.Nullable;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -24,24 +24,20 @@ import static net.sharewire.googlemapsclustering.Preconditions.checkNotNull;
  *
  * @param <T> the type of an item to be clustered
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCameraIdleListener {
 
-    private static final int QUAD_TREE_BUCKET_CAPACITY = 4;
-    private static final int DEFAULT_MIN_CLUSTER_SIZE = 1;
-
     private final GoogleMap mGoogleMap;
-
-    private final QuadTree<T> mQuadTree;
 
     private final ClusterRenderer<T> mRenderer;
 
     private final Executor mExecutor = Executors.newSingleThreadExecutor();
 
+    private ClusteringAlgorithm<T> mAlgorithm;
+
     private AsyncTask mQuadTreeTask;
 
     private AsyncTask mClusterTask;
-
-    private int mMinClusterSize = DEFAULT_MIN_CLUSTER_SIZE;
 
     /**
      * Defines signatures for methods that are called when a cluster or a cluster item is clicked.
@@ -57,7 +53,7 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
          * <code>false</code> otherwise (i.e., the default behavior should occur). The default behavior is for the camera
          * to move to the marker and an info window to appear.
          */
-        boolean onClusterClick(@NonNull Cluster<T> cluster);
+        boolean onClusterClick(@NonNull MarkerCluster<T> cluster);
 
         /**
          * Called when a marker representing a cluster item has been clicked.
@@ -81,7 +77,7 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
         checkNotNull(context);
         mGoogleMap = checkNotNull(googleMap);
         mRenderer = new ClusterRenderer<>(context, googleMap);
-        mQuadTree = new QuadTree<>(QUAD_TREE_BUCKET_CAPACITY);
+        mAlgorithm = new ClusterAlgorithm<>();
     }
 
     /**
@@ -110,8 +106,7 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
      * @param clusterItems the items to be clustered
      */
     public void setItems(@NonNull List<T> clusterItems) {
-        checkNotNull(clusterItems);
-        buildQuadTree(clusterItems);
+        buildQuadTree(checkNotNull(clusterItems));
     }
 
     /**
@@ -120,7 +115,11 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
      */
     public void setMinClusterSize(int minClusterSize) {
         checkArgument(minClusterSize > 0);
-        mMinClusterSize = minClusterSize;
+        mAlgorithm.setMinClusterSize(minClusterSize);
+    }
+
+    public void setAlgorithm(@NonNull ClusteringAlgorithm<T> algorithm) {
+        mAlgorithm = checkNotNull(algorithm);
     }
 
     @Override
@@ -128,12 +127,20 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
         cluster();
     }
 
+    public Collection<Marker> getMarkerCollection() {
+        return this.mRenderer.getMarkers();
+    }
+
+    public void refreshMarkerIcons() {
+        mRenderer.refreshMarkers();
+    }
+
     private void buildQuadTree(@NonNull List<T> clusterItems) {
         if (mQuadTreeTask != null) {
             mQuadTreeTask.cancel(true);
         }
 
-        mQuadTreeTask = new QuadTreeTask(clusterItems).executeOnExecutor(mExecutor);
+        mQuadTreeTask = new QuadTreeTask<>(clusterItems, this).executeOnExecutor(mExecutor);
     }
 
     private void cluster() {
@@ -141,130 +148,56 @@ public class ClusterManager<T extends ClusterItem> implements GoogleMap.OnCamera
             mClusterTask.cancel(true);
         }
 
-        mClusterTask = new ClusterTask(mGoogleMap.getProjection().getVisibleRegion().latLngBounds,
-                mGoogleMap.getCameraPosition().zoom).executeOnExecutor(mExecutor);
+        mClusterTask = new ClusterTask<>(mGoogleMap.getProjection().getVisibleRegion().latLngBounds,
+                mGoogleMap.getCameraPosition().zoom, this).executeOnExecutor(mExecutor);
     }
 
-    @NonNull
-    private List<Cluster<T>> getClusters(@NonNull LatLngBounds latLngBounds, float zoomLevel) {
-        List<Cluster<T>> clusters = new ArrayList<>();
-
-        long tileCount = (long) (Math.pow(2, zoomLevel) * 2);
-
-        double startLatitude = latLngBounds.northeast.latitude;
-        double endLatitude = latLngBounds.southwest.latitude;
-
-        double startLongitude = latLngBounds.southwest.longitude;
-        double endLongitude = latLngBounds.northeast.longitude;
-
-        double stepLatitude = 180.0 / tileCount;
-        double stepLongitude = 360.0 / tileCount;
-
-        if (startLongitude > endLongitude) { // Longitude +180°/-180° overlap.
-            // [start longitude; 180]
-            getClustersInsideBounds(clusters, startLatitude, endLatitude,
-                    startLongitude, 180.0, stepLatitude, stepLongitude);
-            // [-180; end longitude]
-            getClustersInsideBounds(clusters, startLatitude, endLatitude,
-                    -180.0, endLongitude, stepLatitude, stepLongitude);
-        } else {
-            getClustersInsideBounds(clusters, startLatitude, endLatitude,
-                    startLongitude, endLongitude, stepLatitude, stepLongitude);
-        }
-
-        return clusters;
-    }
-
-    private void getClustersInsideBounds(@NonNull List<Cluster<T>> clusters,
-                                         double startLatitude, double endLatitude,
-                                         double startLongitude, double endLongitude,
-                                         double stepLatitude, double stepLongitude) {
-        long startX = (long) ((startLongitude + 180.0) / stepLongitude);
-        long startY = (long) ((90.0 - startLatitude) / stepLatitude);
-
-        long endX = (long) ((endLongitude + 180.0) / stepLongitude) + 1;
-        long endY = (long) ((90.0 - endLatitude) / stepLatitude) + 1;
-
-        for (long tileX = startX; tileX <= endX; tileX++) {
-            for (long tileY = startY; tileY <= endY; tileY++) {
-                double north = 90.0 - tileY * stepLatitude;
-                double west = tileX * stepLongitude - 180.0;
-                double south = north - stepLatitude;
-                double east = west + stepLongitude;
-
-                List<T> points = mQuadTree.queryRange(north, west, south, east);
-
-                if (points.isEmpty()) {
-                    continue;
-                }
-
-                if (points.size() >= mMinClusterSize) {
-                    double totalLatitude = 0;
-                    double totalLongitude = 0;
-
-                    for (T point : points) {
-                        totalLatitude += point.getLatitude();
-                        totalLongitude += point.getLongitude();
-                    }
-
-                    double latitude = totalLatitude / points.size();
-                    double longitude = totalLongitude / points.size();
-
-                    clusters.add(new Cluster<>(latitude, longitude,
-                            points, north, west, south, east));
-                } else {
-                    for (T point : points) {
-                        clusters.add(new Cluster<>(point.getLatitude(), point.getLongitude(),
-                                Collections.singletonList(point), north, west, south, east));
-                    }
-                }
-            }
-        }
-    }
-
-    private class QuadTreeTask extends AsyncTask<Void, Void, Void> {
+    private static class QuadTreeTask<T extends ClusterItem> extends AsyncTask<Void, Void, Void> {
 
         private final List<T> mClusterItems;
+        private final ClusterManager<T> mClusterManager;
 
-        private QuadTreeTask(@NonNull List<T> clusterItems) {
+        private QuadTreeTask(@NonNull List<T> clusterItems, ClusterManager<T> clusterManager) {
             mClusterItems = clusterItems;
+            mClusterManager = clusterManager;
         }
 
         @Override
         protected Void doInBackground(Void... params) {
-            mQuadTree.clear();
-            for (T clusterItem : mClusterItems) {
-                mQuadTree.insert(clusterItem);
-            }
+            mClusterManager.mAlgorithm.setItems(mClusterItems);
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            cluster();
-            mQuadTreeTask = null;
+            mClusterManager.cluster();
+            mClusterManager.mQuadTreeTask = null;
         }
     }
 
-    private class ClusterTask extends AsyncTask<Void, Void, List<Cluster<T>>> {
+    private static class ClusterTask<T extends ClusterItem> extends AsyncTask<Void, Void, List<MarkerCluster<T>>> {
 
         private final LatLngBounds mLatLngBounds;
         private final float mZoomLevel;
+        private final ClusterManager<T> mClusterManager;
 
-        private ClusterTask(@NonNull LatLngBounds latLngBounds, float zoomLevel) {
+        private ClusterTask(@NonNull LatLngBounds latLngBounds,
+                            float zoomLevel,
+                            ClusterManager<T> clusterManager) {
             mLatLngBounds = latLngBounds;
             mZoomLevel = zoomLevel;
+            mClusterManager = clusterManager;
         }
 
         @Override
-        protected List<Cluster<T>> doInBackground(Void... params) {
-            return getClusters(mLatLngBounds, mZoomLevel);
+        protected List<MarkerCluster<T>> doInBackground(Void... params) {
+            return mClusterManager.mAlgorithm.getClusters(mLatLngBounds, mZoomLevel);
         }
 
         @Override
-        protected void onPostExecute(@NonNull List<Cluster<T>> clusters) {
-            mRenderer.render(clusters);
-            mClusterTask = null;
+        protected void onPostExecute(@NonNull List<MarkerCluster<T>> clusters) {
+            mClusterManager.mRenderer.render(clusters);
+            mClusterManager.mClusterTask = null;
         }
     }
 }

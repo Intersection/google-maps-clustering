@@ -17,7 +17,7 @@ public interface IconGenerator<T extends ClusterItem> {
      * @return the icon for the given cluster
      */
     @NonNull
-    BitmapDescriptor getClusterIcon(@NonNull Cluster<T> cluster);
+    BitmapDescriptor getClusterIcon(@NonNull MarkerCluster<T> cluster);
 
     /**
      * Returns an icon for the given cluster item.

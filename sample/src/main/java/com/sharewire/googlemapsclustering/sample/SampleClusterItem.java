@@ -16,13 +16,8 @@ class SampleClusterItem implements ClusterItem {
     }
 
     @Override
-    public double getLatitude() {
-        return location.latitude;
-    }
-
-    @Override
-    public double getLongitude() {
-        return location.longitude;
+    public LatLng getPosition() {
+        return location;
     }
 
     @Nullable
