@@ -1,4 +1,3 @@
 <resources>
     <string name="app_name">Google Maps Clustering Sample</string>
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyBVM9w6E35drm3sxjfulnEp7TxuQk4iqus</string>
 </resources>
