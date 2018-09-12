@@ -38,7 +38,7 @@ public class DefaultIconGenerator<T extends ClusterItem> implements IconGenerato
     /**
      * Creates an icon generator with the default icon style.
      */
-    public DefaultIconGenerator(@NonNull Context context) {
+    protected DefaultIconGenerator(@NonNull Context context) {
         mContext = checkNotNull(context);
         setIconStyle(createDefaultIconStyle());
     }
@@ -48,12 +48,12 @@ public class DefaultIconGenerator<T extends ClusterItem> implements IconGenerato
      *
      * @param iconStyle the custom icon style used to generate marker icons
      */
-    public void setIconStyle(@NonNull IconStyle iconStyle) {
+    private void setIconStyle(@NonNull IconStyle iconStyle) {
         mIconStyle = checkNotNull(iconStyle);
     }
 
     @NonNull
-    public BitmapDescriptor getClusterIcon(@NonNull Cluster<T> cluster) {
+    public BitmapDescriptor getClusterIcon(@NonNull MarkerCluster<T> cluster) {
         int clusterBucket = getClusterIconBucket(cluster);
         BitmapDescriptor clusterIcon = mClusterIcons.get(clusterBucket);
 
@@ -119,7 +119,7 @@ public class DefaultIconGenerator<T extends ClusterItem> implements IconGenerato
         return BitmapDescriptorFactory.fromResource(mIconStyle.getClusterIconResId());
     }
 
-    private int getClusterIconBucket(@NonNull Cluster<T> cluster) {
+    private int getClusterIconBucket(@NonNull MarkerCluster<T> cluster) {
         int itemCount = cluster.getItems().size();
         if (itemCount <= CLUSTER_ICON_BUCKETS[0]) {
             return itemCount;

@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-class QuadTreeNode<T extends QuadTreePoint> {
+class QuadTreeNode<T extends ClusterItem> {
 
     private final QuadTreeRect bounds;
     private final List<T> points;
@@ -23,7 +23,7 @@ class QuadTreeNode<T extends QuadTreePoint> {
 
     boolean insert(@NonNull T point) {
         // Ignore objects that do not belong in this quad tree.
-        if (!bounds.contains(point.getLatitude(), point.getLongitude())) {
+        if (!bounds.contains(point.getPosition().latitude, point.getPosition().longitude)) {
             return false;
         }
 
@@ -38,21 +38,10 @@ class QuadTreeNode<T extends QuadTreePoint> {
             subdivide();
         }
 
-        if (northWest.insert(point)) {
-            return true;
-        }
-        if (northEast.insert(point)) {
-            return true;
-        }
-        if (southWest.insert(point)) {
-            return true;
-        }
-        if (southEast.insert(point)) {
-            return true;
-        }
-
-        // Otherwise, the point cannot be inserted for some unknown reason (this should never happen).
-        return false;
+        return northWest.insert(point) ||
+                northEast.insert(point) ||
+                southWest.insert(point) ||
+                southEast.insert(point);
     }
 
     void queryRange(@NonNull QuadTreeRect range, @NonNull List<T> pointsInRange) {
@@ -63,7 +52,7 @@ class QuadTreeNode<T extends QuadTreePoint> {
 
         // Check objects at this quad level.
         for (T point : points) {
-            if (range.contains(point.getLatitude(), point.getLongitude())) {
+            if (range.contains(point.getPosition().latitude, point.getPosition().longitude)) {
                 pointsInRange.add(point);
             }
         }

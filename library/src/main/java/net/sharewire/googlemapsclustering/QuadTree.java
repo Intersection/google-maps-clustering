@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-class QuadTree<T extends QuadTreePoint> {
+class QuadTree<T extends ClusterItem> {
 
     private final int bucketSize;
 
