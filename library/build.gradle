@@ -39,8 +39,8 @@ dependencies {
 }
 
 publish {
-    userOrg = 'sharewire'
-    groupId = 'net.sharewire'
+    userOrg = 'intersection'
+    groupId = 'com.intersection'
     artifactId = 'google-maps-clustering'
     publishVersion = rootProject.versionName
     desc = 'Fast marker clustering library for Google Maps Android API.'

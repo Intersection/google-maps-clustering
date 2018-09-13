@@ -7,9 +7,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.4'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3'
     }
 }
 
@@ -38,4 +36,91 @@ ext {
 
     supportVersion = '27.1.1'
     playServicesVersion = '15.0.1'
+}
+
+subprojects { subproject ->
+    repositories {
+        jcenter()
+        google()
+    }
+
+    apply plugin: 'com.jfrog.artifactory'
+
+    afterEvaluate { project ->
+
+        if (runningInCIServer()) {
+
+            println("Running in CI Server")
+            if (project.hasProperty('androidArtifactType')) {
+
+                println("androidArtifactType == " + androidArtifactType)
+                if (androidArtifactType == "aar") {
+                    if (uploadToArtifactory()) {
+                        println("Uploading to Artifactory")
+                        artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
+                        publishing {
+                            publications {
+                                debugaar(MavenPublication) {
+                                    groupId = "co.intersection.debug"
+                                    artifactId = project.getName()
+                                    version = "${majorVersion}-SNAPSHOT"
+                                    artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
+                                }
+
+                                releaseaar(MavenPublication) {
+                                    groupId = "co.intersection.release"
+                                    artifactId = project.getName()
+                                    version = "${majorVersion}-SNAPSHOT"
+                                    artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+                                }
+                            }
+                        }
+
+                        artifactoryPublish {
+                            publications(publishing.publications.debugaar)
+                            publications(publishing.publications.releaseaar)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+artifactory {
+    contextUrl = 'https://intersection.jfrog.io/intersection'
+    publish {
+        repository {
+            repoKey = 'google-map-clustering'
+            username = System.getenv("ARTIFACTORY_USERNAME")
+            password = System.getenv("ARTIFACTORY_PASSWORD")
+        }
+        defaults {
+            publishBuildInfo = true
+            publishArtifacts = true
+            publishPom = false
+        }
+    }
+}
+
+static def runningInCIServer() {
+    return System.env['BUILDKITE'] as boolean
+}
+
+def uploadToArtifactory() {
+    return runningInCIServer() && gitBranch() == rootProject.ext.masterBranch
+}
+
+static def gitBranch() {
+    //buildkite checks out a specific commit instead of a branch, branch info is available in an env var
+    if (System.getenv("BUILDKITE_BRANCH") != null) {
+        return System.getenv("BUILDKITE_BRANCH")
+    }
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+
+    return branch
 }

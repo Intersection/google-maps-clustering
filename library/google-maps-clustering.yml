@@ -1,0 +1,10 @@
+steps:
+  - command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
+    label: "Build"
+    agents:
+      - "queue=link-tablet"
+    env:
+      JAVA_HOME: "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+    artifact_paths:
+      - "library/build/outputs/aar/library-release.aar"
+      - "library/build/outputs/aar/library-debug.aar"
