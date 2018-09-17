@@ -55,11 +55,9 @@ class ClusterRenderer<T extends ClusterItem> implements GoogleMap.OnMarkerClickL
             List<T> clusterItems = cluster.getItems();
 
             if (mCallbacks != null) {
-                if (clusterItems.size() > 1) {
-                    return mCallbacks.onClusterClick(cluster);
-                } else {
-                    return mCallbacks.onClusterItemClick(clusterItems.get(0));
-                }
+                return clusterItems.size() == 1 ?
+                        mCallbacks.onClusterItemClick(clusterItems.get(0)) :
+                        mCallbacks.onClusterClick(cluster);
             }
         }
 
@@ -160,11 +158,9 @@ class ClusterRenderer<T extends ClusterItem> implements GoogleMap.OnMarkerClickL
         BitmapDescriptor clusterIcon;
 
         List<T> clusterItems = cluster.getItems();
-        if (clusterItems.size() > 1) {
-            clusterIcon = mIconGenerator.getClusterIcon(cluster);
-        } else {
-            clusterIcon = mIconGenerator.getClusterItemIcon(clusterItems.get(0));
-        }
+        clusterIcon = clusterItems.size() == 1 ?
+                mIconGenerator.getClusterItemIcon(clusterItems.get(0)) :
+                mIconGenerator.getClusterIcon(cluster);
 
         return checkNotNull(clusterIcon);
     }
@@ -172,21 +168,13 @@ class ClusterRenderer<T extends ClusterItem> implements GoogleMap.OnMarkerClickL
     @Nullable
     private String getMarkerTitle(@NonNull MarkerCluster<T> cluster) {
         List<T> clusterItems = cluster.getItems();
-        if (clusterItems.size() > 1) {
-            return null;
-        } else {
-            return clusterItems.get(0).getTitle();
-        }
+        return clusterItems.size() == 1 ? clusterItems.get(0).getTitle() : null;
     }
 
     @Nullable
     private String getMarkerSnippet(@NonNull MarkerCluster<T> cluster) {
         List<T> clusterItems = cluster.getItems();
-        if (clusterItems.size() > 1) {
-            return null;
-        } else {
-            return clusterItems.get(0).getSnippet();
-        }
+        return clusterItems.size() == 1 ? clusterItems.get(0).getSnippet() : null;
     }
 
     @Nullable

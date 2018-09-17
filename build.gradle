@@ -36,6 +36,7 @@ ext {
 
     supportVersion = '27.1.1'
     playServicesVersion = '15.0.1'
+    masterBranch = "master"
 }
 
 subprojects { subproject ->
@@ -45,6 +46,7 @@ subprojects { subproject ->
     }
 
     apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'maven-publish'
 
     afterEvaluate { project ->
 
@@ -54,25 +56,24 @@ subprojects { subproject ->
             if (project.hasProperty('androidArtifactType')) {
 
                 println("androidArtifactType == " + androidArtifactType)
+                println("gitBranch() == " + gitBranch())
                 if (androidArtifactType == "aar") {
                     if (uploadToArtifactory()) {
                         println("Uploading to Artifactory")
                         artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
-                        publishing {
-                            publications {
-                                debugaar(MavenPublication) {
-                                    groupId = "co.intersection.debug"
-                                    artifactId = project.getName()
-                                    version = "${majorVersion}-SNAPSHOT"
-                                    artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
-                                }
+                        publishing.publications {
+                            debugaar(MavenPublication) {
+                                groupId = "co.intersection.debug"
+                                artifactId = project.getName()
+                                version = "${majorVersion}-SNAPSHOT"
+                                artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
+                            }
 
-                                releaseaar(MavenPublication) {
-                                    groupId = "co.intersection.release"
-                                    artifactId = project.getName()
-                                    version = "${majorVersion}-SNAPSHOT"
-                                    artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-                                }
+                            releaseaar(MavenPublication) {
+                                groupId = "co.intersection.release"
+                                artifactId = project.getName()
+                                version = "${majorVersion}-SNAPSHOT"
+                                artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
                             }
                         }
 
