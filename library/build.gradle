@@ -46,3 +46,7 @@ publish {
     desc = 'Fast marker clustering library for Google Maps Android API.'
     website = 'https://github.com/sharewire/google-maps-clustering'
 }
+
+ext {
+    androidArtifactType = "aar"
+}
