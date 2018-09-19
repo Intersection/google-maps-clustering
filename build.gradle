@@ -60,6 +60,8 @@ subprojects { subproject ->
                 if (androidArtifactType == "aar") {
                     if (uploadToArtifactory()) {
                         println("Uploading to Artifactory")
+                        println("ARTIFACTORY_USERNAME " + isVariableSet("ARTIFACTORY_USERNAME"))
+                        println("ARTIFACTORY_PASSWORD " + isVariableSet("ARTIFACTORY_PASSWORD"))
                         artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
                         publishing.publications {
                             debugaar(MavenPublication) {
@@ -109,6 +111,11 @@ artifactory {
         password = System.getenv("ARTIFACTORY_PASSWORD")
         maven = true
     }
+}
+
+static def isVariableSet(String variableName) {
+    def variableValue = System.getenv(variableName)
+    return variableValue == null ? "null" : variableValue == "" ? "missing" : "set"
 }
 
 static def runningInCIServer() {
