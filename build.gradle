@@ -92,15 +92,22 @@ artifactory {
     contextUrl = 'https://intersection.jfrog.io/intersection'
     publish {
         repository {
-            repoKey = 'google-map-clustering'
+            repoKey = 'libs-release-local'
             username = System.getenv("ARTIFACTORY_USERNAME")
             password = System.getenv("ARTIFACTORY_PASSWORD")
+            maven = true
         }
         defaults {
             publishBuildInfo = true
             publishArtifacts = true
             publishPom = false
         }
+    }
+    resolve {
+        repoKey = 'libs-release'
+        username = System.getenv("ARTIFACTORY_USERNAME")
+        password = System.getenv("ARTIFACTORY_PASSWORD")
+        maven = true
     }
 }
 
