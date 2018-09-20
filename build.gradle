@@ -62,19 +62,20 @@ subprojects { subproject ->
                         println("Uploading to Artifactory")
                         println("ARTIFACTORY_USERNAME " + isVariableSet("ARTIFACTORY_USERNAME"))
                         println("ARTIFACTORY_PASSWORD " + isVariableSet("ARTIFACTORY_PASSWORD"))
+                        println("Project name :" + project.getName())
                         artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
                         publishing.publications {
                             debugaar(MavenPublication) {
                                 groupId = "co.intersection.debug"
-                                artifactId = project.getName()
-                                version = "${majorVersion}-SNAPSHOT"
+                                artifactId = "${project.getName()}-debug"
+                                version = majorVersion
                                 artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
                             }
 
                             releaseaar(MavenPublication) {
                                 groupId = "co.intersection.release"
-                                artifactId = project.getName()
-                                version = "${majorVersion}-SNAPSHOT"
+                                artifactId = "${project.getName()}-release"
+                                version = majorVersion
                                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
                             }
                         }
