@@ -65,14 +65,14 @@ subprojects { subproject ->
                         println("Project name :" + project.getName())
                         artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
                         publishing.publications {
-                            debugaar(GradlePublication) {
+                            debugaar(MavenPublication) {
                                 groupId = "co.intersection.debug"
                                 artifactId = "${project.getName()}-debug"
                                 version = majorVersion
                                 artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
                             }
 
-                            releaseaar(GradlePublication) {
+                            releaseaar(MavenPublication) {
                                 groupId = "co.intersection.release"
                                 artifactId = "${project.getName()}-release"
                                 version = majorVersion
