@@ -65,15 +65,15 @@ subprojects { subproject ->
                         println("Project name :" + project.getName())
                         artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
                         publishing.publications {
-                            debugaar(MavenPublication) {
-                                groupId = "google-maps-clustering.co.intersection.debug"
+                            debugaar(GradlePublication) {
+                                groupId = "co.intersection.debug"
                                 artifactId = "${project.getName()}-debug"
                                 version = majorVersion
                                 artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
                             }
 
-                            releaseaar(MavenPublication) {
-                                groupId = "google-maps-clustering.co.intersection.release"
+                            releaseaar(GradlePublication) {
+                                groupId = "co.intersection.release"
                                 artifactId = "${project.getName()}-release"
                                 version = majorVersion
                                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
