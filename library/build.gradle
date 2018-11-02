@@ -12,7 +12,6 @@ buildscript {
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
-    buildToolsVersion rootProject.buildToolsVersion
 
     sourceSets {
         main.res.srcDirs 'res', 'res-public'

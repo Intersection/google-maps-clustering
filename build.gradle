@@ -2,8 +2,8 @@
 
 buildscript {
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.4'
@@ -13,11 +13,11 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         maven {
             url "https://maven.google.com"
         }
         google()
+        jcenter()
     }
 }
 
@@ -32,7 +32,6 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 27
     compileSdkVersion = 27
-    buildToolsVersion = '26.0.2'
 
     supportVersion = '27.1.1'
     playServicesVersion = '15.0.1'
@@ -41,8 +40,8 @@ ext {
 
 subprojects { subproject ->
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
 
     apply plugin: 'com.jfrog.artifactory'
