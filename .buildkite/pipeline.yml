@@ -7,6 +7,9 @@ steps:
     agents:
       - "queue=link-tablet"
     branches: "!master"
+    artifact_paths:
+      - "library/build/outputs/aar/library-release.aar"
+      - "library/build/outputs/aar/library-debug.aar"
 
   - label: "Publish artifacts"
     command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
