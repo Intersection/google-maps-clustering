@@ -1,10 +1,15 @@
+env:
+  JAVA_HOME: "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+
 steps:
-  - command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
-    label: "Build"
+  - label: "Build"
+    command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug"
     agents:
       - "queue=link-tablet"
-    env:
-      JAVA_HOME: "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+
+  - label: "Publish artifacts"
+    command: "./gradlew :library:artifactoryPublish"
+    branches: "master"
     artifact_paths:
-      - "library/build/outputs/aar/library-release.aar"
-      - "library/build/outputs/aar/library-debug.aar"
+      - "library/build/outputs/aar/google-maps-clustering-release.aar"
+      - "library/build/outputs/aar/google-maps-clustering-debug.aar"
