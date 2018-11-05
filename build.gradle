@@ -56,32 +56,30 @@ subprojects { subproject ->
 
                 println("androidArtifactType == " + androidArtifactType)
                 println("gitBranch() == " + gitBranch())
-                if (androidArtifactType == "aar") {
-                    if (uploadToArtifactory()) {
-                        println("Uploading to Artifactory")
-                        println("ARTIFACTORY_USERNAME " + isVariableSet("ARTIFACTORY_USERNAME"))
-                        println("ARTIFACTORY_PASSWORD " + isVariableSet("ARTIFACTORY_PASSWORD"))
-                        artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
-                        publishing.publications {
-                            debugaar(MavenPublication) {
-                                groupId = "co.intersection.debug"
-                                artifactId = "google-maps-clustering-debug"
-                                version = majorVersion
-                                artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
-                            }
-
-                            releaseaar(MavenPublication) {
-                                groupId = "co.intersection.release"
-                                artifactId = "google-maps-clustering-release"
-                                version = majorVersion
-                                artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-                            }
+                if (androidArtifactType == "aar" && uploadToArtifactory()) {
+                    println("Uploading to Artifactory")
+                    println("ARTIFACTORY_USERNAME " + isVariableSet("ARTIFACTORY_USERNAME"))
+                    println("ARTIFACTORY_PASSWORD " + isVariableSet("ARTIFACTORY_PASSWORD"))
+                    artifactoryPublish.dependsOn('assembleDebug', 'assembleRelease')
+                    publishing.publications {
+                        debugaar(MavenPublication) {
+                            groupId = "co.intersection.debug"
+                            artifactId = "google-maps-clustering-debug"
+                            version = majorVersion
+                            artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
                         }
 
-                        artifactoryPublish {
-                            publications(publishing.publications.debugaar)
-                            publications(publishing.publications.releaseaar)
+                        releaseaar(MavenPublication) {
+                            groupId = "co.intersection.release"
+                            artifactId = "google-maps-clustering-release"
+                            version = majorVersion
+                            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
                         }
+                    }
+
+                    artifactoryPublish {
+                        publications(publishing.publications.debugaar)
+                        publications(publishing.publications.releaseaar)
                     }
                 }
             }
@@ -118,11 +116,12 @@ static def isVariableSet(String variableName) {
 }
 
 static def runningInCIServer() {
-    return System.env['BUILDKITE'] as boolean
+//    return System.env['BUILDKITE'] as boolean
+    return true;
 }
 
 def uploadToArtifactory() {
-    return runningInCIServer() && gitBranch() == rootProject.ext.masterBranch
+    return true
 }
 
 static def gitBranch() {

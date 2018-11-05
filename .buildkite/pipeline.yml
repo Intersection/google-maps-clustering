@@ -6,17 +6,11 @@ steps:
     command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug"
     agents:
       - "queue=link-tablet"
-    branches: "!master"
     artifact_paths:
       - "library/build/outputs/aar/library-release.aar"
       - "library/build/outputs/aar/library-debug.aar"
 
   - label: "Build and publish artifacts"
-    command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
-    branches: "master"
+    command: "./gradlew :library:artifactoryPublish"
     agents:
       - "queue=link-tablet"
-    artifact_paths:
-      - "library/build/outputs/aar/library-release.aar"
-      - "library/build/outputs/aar/library-debug.aar"
-
