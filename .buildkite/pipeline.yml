@@ -10,7 +10,8 @@ steps:
       - "library/build/outputs/aar/library-release.aar"
       - "library/build/outputs/aar/library-debug.aar"
 
-  - label: "Build and publish artifacts"
+  - label: "Publish artifacts"
     command: "./gradlew :library:artifactoryPublish"
+    branches: "master"
     agents:
       - "queue=link-tablet"
