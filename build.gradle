@@ -66,16 +66,16 @@ subprojects { subproject ->
                         publishing.publications {
                             debugaar(MavenPublication) {
                                 groupId = "co.intersection.debug"
-                                artifactId = "${project.getName()}-debug"
+                                artifactId = "google-maps-clustering-debug"
                                 version = majorVersion
-                                artifact("$buildDir/outputs/aar/${project.getName()}-debug.aar")
+                                artifact("$buildDir/outputs/aar/google-maps-clustering-debug.aar")
                             }
 
                             releaseaar(MavenPublication) {
                                 groupId = "co.intersection.release"
-                                artifactId = "${project.getName()}-release"
+                                artifactId = "google-maps-clustering-release"
                                 version = majorVersion
-                                artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+                                artifact("$buildDir/outputs/aar/google-maps-clustering-release.aar")
                             }
                         }
 
