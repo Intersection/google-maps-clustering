@@ -6,12 +6,14 @@ steps:
     command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug"
     agents:
       - "queue=link-tablet"
+    branches: "!master"
 
   - label: "Publish artifacts"
-    command: "./gradlew :library:artifactoryPublish"
+    command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
     branches: "master"
     agents:
       - "queue=link-tablet"
     artifact_paths:
       - "library/build/outputs/aar/google-maps-clustering-release.aar"
       - "library/build/outputs/aar/google-maps-clustering-debug.aar"
+
