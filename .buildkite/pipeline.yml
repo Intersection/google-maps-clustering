@@ -11,7 +11,7 @@ steps:
       - "library/build/outputs/aar/library-debug.aar"
 
   - label: "Publish artifacts"
-    command: "./gradlew :library:artifactoryPublish"
+    command: "./gradlew :library:clean :library:assembleRelease :library:assembleDebug :library:artifactoryPublish"
     branches: "master"
     agents:
       - "queue=link-tablet"
